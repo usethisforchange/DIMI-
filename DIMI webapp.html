@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIMI - Drum Machine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            color: #333;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn.active {
+            background: #764ba2;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .tile {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .tile:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .tile.active {
+            transform: scale(0.95);
+            box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .tile.drag-over {
+            border-color: #FFD700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .tile-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .tile-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .keymapping {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .keymapping h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .sound-pool {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .sound-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px dashed #667eea;
+            text-align: center;
+            cursor: grab;
+            transition: all 0.2s;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .sound-item:active {
+            cursor: grabbing;
+        }
+
+        .sound-item:hover {
+            border-color: #764ba2;
+            background: #f9f9f9;
+        }
+
+        .info {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 36px;
+            }
+
+            .tile-number {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>DIMI</h1>
+            <p>🥁 DRUM MACHINE</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn active" onclick="toggleKeyboard()">
+                <i class="fas fa-keyboard"></i> Keyboard On
+            </button>
+            <button class="btn" onclick="toggleKeymapping()">
+                <i class="fas fa-mouse"></i> Keymapping
+            </button>
+            <button class="btn" onclick="clearAll()">
+                <i class="fas fa-trash"></i> Clear
+            </button>
+        </div>
+
+        <div class="grid" id="grid"></div>
+
+        <div class="keymapping" id="keymapping" style="display: none;">
+            <h3><i class="fas fa-edit"></i> Drag Sounds to Tiles</h3>
+            <div class="sound-pool" id="soundPool"></div>
+        </div>
+
+        <div class="info">
+            Press <strong>1-9</strong> on keyboard or click tiles to play • Drag sounds in Keymapping mode
+        </div>
+    </div>
+
+    <script>
+        const drumSounds = [
+            { name: 'Kick', url: 'https://freepd.com/music/Drum%20Kit/Kick%20(1).mp3' },
+            { name: 'Snare', url: 'https://freepd.com/music/Drum%20Kit/Snare%20(1).mp3' },
+            { name: 'Hi-Hat', url: 'https://freepd.com/music/Drum%20Kit/Hi-Hat%20(1).mp3' },
+            { name: 'Tom', url: 'https://freepd.com/music/Drum%20Kit/Tom%20(1).mp3' },
+            { name: 'Clap', url: 'https://freepd.com/music/Drum%20Kit/Clap%20(1).mp3' },
+            { name: 'Rim', url: 'https://freepd.com/music/Drum%20Kit/Rim%20(1).mp3' },
+            { name: 'Perc', url: 'https://freepd.com/music/Drum%20Kit/Perc%20(1).mp3' },
+            { name: 'Cowbell', url: 'https://freepd.com/music/Drum%20Kit/Cowbell.mp3' },
+            { name: 'Ride', url: 'https://freepd.com/music/Drum%20Kit/Ride.mp3' }
+        ];
+
+        let tileMapping = [...drumSounds];
+        let keyboardEnabled = true;
+        let keymappingMode = false;
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function createOscillatorSound(tileIndex) {
+            const now = audioContext.currentTime;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+
+            const freq = [150, 200, 250, 300, 350, 400, 450, 500, 550][tileIndex];
+            osc.frequency.setValueAtTime(freq, now);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+
+        function playTile(index) {
+            createOscillatorSound(index);
+            const tile = document.querySelectorAll('.tile')[index];
+            tile.classList.add('active');
+            setTimeout(() => tile.classList.remove('active'), 100);
+        }
+
+        function initGrid() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            tileMapping.forEach((sound, idx) => {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.draggable = keymappingMode;
+                tile.innerHTML = `<div class="tile-number">${idx + 1}</div><div class="tile-label">${sound.name}</div>`;
+                tile.onclick = () => playTile(idx);
+                tile.ondragover = (e) => {
+                    if (keymappingMode) {
+                        e.preventDefault();
+                        tile.classList.add('drag-over');
+                    }
+                };
+                tile.ondragleave = () => tile.classList.remove('drag-over');
+                tile.ondrop = (e) => {
+                    e.preventDefault();
+                    tile.classList.remove('drag-over');
+                    const draggedSound = JSON.parse(e.dataTransfer.getData('text'));
+                    tileMapping[idx] = draggedSound;
+                    initGrid();
+                };
+                grid.appendChild(tile);
+            });
+        }
+
+        function initSoundPool() {
+            const pool = document.getElementById('soundPool');
+            pool.innerHTML = '';
+            drumSounds.forEach(sound => {
+                const item = document.createElement('div');
+                item.className = 'sound-item';
+                item.draggable = true;
+                item.textContent = sound.name;
+                item.ondragstart = (e) => {
+                    e.dataTransfer.effectAllowed = 'copy';
+                    e.dataTransfer.setData('text', JSON.stringify(sound));
+                };
+                pool.appendChild(item);
+            });
+        }
+
+        function toggleKeyboard() {
+            keyboardEnabled = !keyboardEnabled;
+            event.target.closest('.btn').classList.toggle('active');
+        }
+
+        function toggleKeymapping() {
+            keymappingMode = !keymappingMode;
+            document.getElementById('keymapping').style.display = keymappingMode ? 'block' : 'none';
+            event.target.closest('.btn').classList.toggle('active');
+            if (keymappingMode) initSoundPool();
+            initGrid();
+        }
+
+        function clearAll() {
+            tileMapping = [...drumSounds];
+            initGrid();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (keyboardEnabled && !keymappingMode) {
+                const num = parseInt(e.key);
+                if (num >= 1 && num <= 9) {
+                    playTile(num - 1);
+                }
+            }
+        });
+
+        initGrid();
+    </script>
+</body>
+</html>
